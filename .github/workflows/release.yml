@@ -26,25 +26,25 @@ jobs:
       - name: Build release
         run: msbuild WinampSMTC.sln /m /p:Configuration=Release /p:Platform=x86
 
-      - name: Create package
+      - name: Copy DLL artifact
         shell: pwsh
         run: |
-          $packageDirectory = Join-Path $env:RUNNER_TEMP 'winamp-smtc'
-          New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
-          Copy-Item 'bin\Release\gen_winsmtc.dll' $packageDirectory
-          Compress-Archive -Path (Join-Path $packageDirectory 'gen_winsmtc.dll') -DestinationPath 'winamp-smtc-release.zip' -Force
+          $artifactDirectory = Join-Path $env:RUNNER_TEMP 'winamp-smtc'
+          New-Item -ItemType Directory -Force -Path $artifactDirectory | Out-Null
+          Copy-Item 'bin\Release\gen_winsmtc.dll' $artifactDirectory
 
       - name: Generate SHA256
         shell: pwsh
         run: |
-          $hash = (Get-FileHash 'winamp-smtc-release.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  winamp-smtc-release.zip" | Set-Content 'winamp-smtc-release.zip.sha256' -NoNewline
+          $dllPath = Join-Path $env:RUNNER_TEMP 'winamp-smtc\gen_winsmtc.dll'
+          $hash = (Get-FileHash $dllPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  gen_winsmtc.dll" | Set-Content (Join-Path $env:RUNNER_TEMP 'winamp-smtc\gen_winsmtc.dll.sha256') -NoNewline
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: winamp-smtc-release
           path: |
-            winamp-smtc-release.zip
-            winamp-smtc-release.zip.sha256
+            ${{ runner.temp }}/winamp-smtc/gen_winsmtc.dll
+            ${{ runner.temp }}/winamp-smtc/gen_winsmtc.dll.sha256
           if-no-files-found: error
