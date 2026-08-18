@@ -1,0 +1,4 @@
+LIBRARY gen_winsmtc
+EXPORTS
+    winampGetGeneralPurposePlugin
+    winampUninstallPlugin

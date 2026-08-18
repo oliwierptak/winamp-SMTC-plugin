@@ -1,0 +1,50 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.8.1
+
+      - name: Build release
+        run: msbuild WinampSMTC.sln /m /p:Configuration=Release /p:Platform=x86
+
+      - name: Create package
+        shell: pwsh
+        run: |
+          $packageDirectory = Join-Path $env:RUNNER_TEMP 'winamp-smtc'
+          New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
+          Copy-Item 'bin\Release\gen_winsmtc.dll' $packageDirectory
+          Compress-Archive -Path (Join-Path $packageDirectory 'gen_winsmtc.dll') -DestinationPath 'winamp-smtc-release.zip' -Force
+
+      - name: Generate SHA256
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash 'winamp-smtc-release.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  winamp-smtc-release.zip" | Set-Content 'winamp-smtc-release.zip.sha256' -NoNewline
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: winamp-smtc-release
+          path: |
+            winamp-smtc-release.zip
+            winamp-smtc-release.zip.sha256
+          if-no-files-found: error

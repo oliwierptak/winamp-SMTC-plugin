@@ -1,0 +1,76 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Xx]64/
+[Xx]86/
+*.exe
+*.dll
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.aps
+*.pch
+*.sbr
+*.ipch/
+*.idb
+*.iobj
+*.ipdb
+*.map
+*.snapshot
+
+# Visual Studio / MSBuild
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+*.VC.db-shm
+*.VC.db-wal
+*.vcxproj.user
+*.vcxproj.filters
+*.opendb
+*.dbmdl
+*.cache
+*.tlog/
+*.log
+*.lastbuildstate
+*.unsuccessfulbuild
+
+# VS Code / editor metadata
+.vscode/
+*.code-workspace
+.history/
+.ionide/
+
+# C / C++ generated files
+*.obj
+*.o
+*.lo
+*.d
+*.tmp
+*.tmp.obj
+*.tmp.o
+*.pch
+*.a
+*.so
+*.out
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Git / patch artifacts
+*.orig
+*.rej
+*.patch
+
+# Local tooling / published output
+.publish/
+artifacts/
+packages/
