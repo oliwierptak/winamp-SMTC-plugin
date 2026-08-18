@@ -1,6 +1,7 @@
 #include "CoverArt.h"
 
 #include <windows.h>
+#include <objbase.h>
 
 #include <cstdint>
 #include <cstring>
@@ -8,6 +9,8 @@
 #include <vector>
 
 namespace {
+
+constexpr uint32_t kMaxId3TagSize = 32 * 1024 * 1024;
 
 std::wstring GetDirectory(const std::wstring& path)
 {
@@ -58,11 +61,37 @@ std::wstring ExtensionForMime(const std::string& mime)
     return L"jpg";
 }
 
-std::wstring TempCoverPath(const std::wstring& extension)
+bool CreateTempCoverFile(const std::wstring& extension, std::wstring& outPath, HANDLE& outFile)
 {
     wchar_t tempDir[MAX_PATH]{};
-    GetTempPathW(MAX_PATH, tempDir);
-    return std::wstring(tempDir) + L"WinampSMTC_cover." + extension;
+    const DWORD length = GetTempPathW(static_cast<DWORD>(std::size(tempDir)), tempDir);
+    if (length == 0 || length >= std::size(tempDir))
+    {
+        return false;
+    }
+
+    GUID guid{};
+    if (FAILED(CoCreateGuid(&guid)))
+    {
+        return false;
+    }
+
+    wchar_t guidText[39]{};
+    if (StringFromGUID2(guid, guidText, static_cast<int>(std::size(guidText))) == 0)
+    {
+        return false;
+    }
+
+    outPath = std::wstring(tempDir) + L"WinampSMTC_cover_" + guidText + L"." + extension;
+    outFile = CreateFileW(
+        outPath.c_str(),
+        GENERIC_WRITE,
+        0,
+        nullptr,
+        CREATE_NEW,
+        FILE_ATTRIBUTE_TEMPORARY | FILE_ATTRIBUTE_NOT_CONTENT_INDEXED,
+        nullptr);
+    return outFile != INVALID_HANDLE_VALUE;
 }
 
 bool WriteImageToTemp(const uint8_t* data, size_t size, const std::wstring& extension, std::wstring& outPath)
@@ -72,21 +101,39 @@ bool WriteImageToTemp(const uint8_t* data, size_t size, const std::wstring& exte
         return false;
     }
 
-    const std::wstring path = TempCoverPath(extension);
-    std::ofstream file(path, std::ios::binary | std::ios::trunc);
-    if (!file)
+    HANDLE file = INVALID_HANDLE_VALUE;
+    if (!CreateTempCoverFile(extension, outPath, file))
     {
         return false;
     }
 
-    file.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
-    if (!file)
+    const uint8_t* current = data;
+    size_t remaining = size;
+    bool succeeded = true;
+    while (remaining > 0)
     {
-        return false;
+        const DWORD chunkSize = (remaining > static_cast<size_t>(MAXDWORD))
+                        ? MAXDWORD
+                        : static_cast<DWORD>(remaining);
+        DWORD written = 0;
+        if (!WriteFile(file, current, chunkSize, &written, nullptr) || written != chunkSize)
+        {
+            succeeded = false;
+            break;
+        }
+
+        current += written;
+        remaining -= written;
     }
 
-    outPath = path;
-    return true;
+    CloseHandle(file);
+    if (!succeeded)
+    {
+        DeleteFileW(outPath.c_str());
+        outPath.clear();
+    }
+
+    return succeeded;
 }
 
 uint32_t ReadSyncSafe32(const uint8_t* p)
@@ -119,7 +166,7 @@ bool ExtractId3v2Picture(std::ifstream& file, std::wstring& outImagePath)
     const uint8_t flags = header[5];
     const uint32_t tagSize = ReadSyncSafe32(&header[6]);
 
-    if (majorVersion < 2 || majorVersion > 4 || tagSize == 0)
+    if (majorVersion < 2 || majorVersion > 4 || tagSize == 0 || tagSize > kMaxId3TagSize)
     {
         return false;
     }
