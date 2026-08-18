@@ -420,7 +420,7 @@ bool FindFolderImage(const std::wstring& trackPath, std::wstring& outImagePath)
         return false;
     }
 
-    for (const wchar_t* name : {L"folder.jpg", L"Folder.jpg", L"folder.png", L"Folder.png"})
+    for (const wchar_t* name : {L"folder.jpg", L"Folder.jpg", L"cover.jpg", L"Cover.jpg", L"folder.png", L"Folder.png"})
     {
         std::wstring candidate = dir + L"\\" + name;
         if (FileExists(candidate))
