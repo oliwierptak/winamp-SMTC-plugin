@@ -4,6 +4,7 @@
 #include <objbase.h>
 
 #include <cstdint>
+#include <cwchar>
 #include <cstring>
 #include <fstream>
 #include <vector>
@@ -33,12 +34,6 @@ std::wstring GetExtensionLower(const std::wstring& path)
     }
 
     return ext;
-}
-
-bool FileExists(const std::wstring& path)
-{
-    const DWORD attrs = GetFileAttributesW(path.c_str());
-    return attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 std::wstring ExtensionForMime(const std::string& mime)
@@ -420,14 +415,32 @@ bool FindFolderImage(const std::wstring& trackPath, std::wstring& outImagePath)
         return false;
     }
 
-    for (const wchar_t* name : {L"folder.jpg", L"Folder.jpg", L"cover.jpg", L"Cover.jpg", L"folder.png", L"Folder.png"})
+    WIN32_FIND_DATAW findData{};
+    HANDLE findHandle = FindFirstFileW((dir + L"\\*").c_str(), &findData);
+    if (findHandle == INVALID_HANDLE_VALUE)
     {
-        std::wstring candidate = dir + L"\\" + name;
-        if (FileExists(candidate))
+        return false;
+    }
+
+    bool found = false;
+    do
+    {
+        if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+            (_wcsicmp(findData.cFileName, L"folder.jpg") == 0 ||
+             _wcsicmp(findData.cFileName, L"folder.png") == 0 ||
+             _wcsicmp(findData.cFileName, L"cover.jpg") == 0 ||
+             _wcsicmp(findData.cFileName, L"cover.png") == 0))
         {
-            outImagePath = candidate;
-            return true;
+            outImagePath = dir + L"\\" + findData.cFileName;
+            found = true;
+            break;
         }
+    } while (FindNextFileW(findHandle, &findData));
+
+    FindClose(findHandle);
+    if (found)
+    {
+        return true;
     }
 
     return false;
