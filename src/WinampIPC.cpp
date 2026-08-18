@@ -38,6 +38,18 @@ void WinampIPC::SeekToMs(int positionMs)
     }
 }
 
+std::string WinampIPC::GetCurrentFilePath()
+{
+    if (!hwnd_)
+    {
+        return {};
+    }
+
+    const int pos = static_cast<int>(SendMessage(hwnd_, WM_USER, 0, 125)); // IPC_GETLISTPOS
+    const char* path = reinterpret_cast<const char*>(SendMessage(hwnd_, WM_USER, pos, 211)); // IPC_GETPLAYLISTFILE
+    return path ? std::string(path) : std::string();
+}
+
 void WinampIPC::Play()
 {
     if (hwnd_)
@@ -123,6 +135,6 @@ void WinampIPC::Poll()
     {
         lastTitle_ = t;
         lastStatus_ = s;
-        smtc_->Update(t, s, GetPositionMs(), GetLengthMs());
+        smtc_->Update(t, s, GetPositionMs(), GetLengthMs(), GetCurrentFilePath());
     }
 }

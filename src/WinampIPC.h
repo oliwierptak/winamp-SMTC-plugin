@@ -23,6 +23,7 @@ public:
     int GetPositionMs();
     int GetLengthMs();
     void SeekToMs(int positionMs);
+    std::string GetCurrentFilePath();
 
     void Play();
     void Pause();

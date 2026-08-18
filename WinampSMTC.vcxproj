@@ -24,19 +24,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"><OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir><IntDir>$(SolutionDir)obj\$(Configuration)\</IntDir><TargetName>gen_winsmtc</TargetName></PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile><WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck><PrecompiledHeader>NotUsing</PrecompiledHeader><LanguageStandard>stdcpp17</LanguageStandard><RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary><ConformanceMode>true</ConformanceMode><PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;WINAMP_SMTC_EXPORTS;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
-    <Link><SubSystem>Windows</SubSystem><GenerateDebugInformation>true</GenerateDebugInformation><ModuleDefinitionFile>$(ProjectDir)src\WinampSMTC.def</ModuleDefinitionFile><AdditionalDependencies>ole32.lib;oleaut32.lib;shell32.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+    <Link><SubSystem>Windows</SubSystem><GenerateDebugInformation>true</GenerateDebugInformation><ModuleDefinitionFile>$(ProjectDir)src\WinampSMTC.def</ModuleDefinitionFile><AdditionalDependencies>ole32.lib;oleaut32.lib;shell32.lib;shcore.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile><WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck><PrecompiledHeader>NotUsing</PrecompiledHeader><LanguageStandard>stdcpp17</LanguageStandard><RuntimeLibrary>MultiThreaded</RuntimeLibrary><ConformanceMode>true</ConformanceMode><WholeProgramOptimization>true</WholeProgramOptimization><PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;WINAMP_SMTC_EXPORTS;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
-    <Link><SubSystem>Windows</SubSystem><GenerateDebugInformation>false</GenerateDebugInformation><ModuleDefinitionFile>$(ProjectDir)src\WinampSMTC.def</ModuleDefinitionFile><AdditionalDependencies>ole32.lib;oleaut32.lib;shell32.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+    <Link><SubSystem>Windows</SubSystem><GenerateDebugInformation>false</GenerateDebugInformation><ModuleDefinitionFile>$(ProjectDir)src\WinampSMTC.def</ModuleDefinitionFile><AdditionalDependencies>ole32.lib;oleaut32.lib;shell32.lib;shcore.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\WinampPlugin.cpp" />
     <ClCompile Include="src\WinampIPC.cpp" />
     <ClCompile Include="src\SMTC.cpp" />
+    <ClCompile Include="src\CoverArt.cpp" />
     <ClInclude Include="src\WinampPlugin.h" />
     <ClInclude Include="src\WinampIPC.h" />
     <ClInclude Include="src\SMTC.h" />
+    <ClInclude Include="src\CoverArt.h" />
     <None Include="src\WinampSMTC.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

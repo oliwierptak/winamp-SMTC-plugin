@@ -36,7 +36,7 @@ static void PluginQuit()
 
 static winampGeneralPurposePlugin g_plugin{
     GPPHDR_VER,
-    const_cast<char*>("Windows System Media Transport Controls by Oliwier Ptak"),
+    const_cast<char*>("Windows System Media Transport Controls"),
     PluginInit,
     PluginConfig,
     PluginQuit};

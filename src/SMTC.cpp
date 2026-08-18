@@ -1,16 +1,21 @@
 #include "SMTC.h"
 
+#include "CoverArt.h"
 #include "WinampIPC.h"
 
 #include <roapi.h>
+#include <shcore.h>
 #include <shobjidl_core.h>
 #include <SystemMediaTransportControlsInterop.h>
 #include <windows.foundation.h>
 #include <windows.media.h>
+#include <windows.storage.streams.h>
 #include <winstring.h>
 #include <wrl/client.h>
 #include <wrl/event.h>
 #include <wrl/wrappers/corewrappers.h>
+
+#include <cstdio>
 
 
 
@@ -118,6 +123,66 @@ void ParseTrackInfo(const std::string& rawTitle, std::wstring& artist, std::wstr
 bool CreateHString(const std::wstring& value, HSTRING& out)
 {
     return SUCCEEDED(WindowsCreateString(value.c_str(), static_cast<UINT32>(value.size()), &out));
+}
+
+bool CreateStreamReferenceFromFile(const std::wstring& path, Microsoft::WRL::ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStreamReference>& streamRef)
+{
+    Microsoft::WRL::ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStream> stream;
+    if (FAILED(CreateRandomAccessStreamOnFile(
+            path.c_str(),
+            ABI::Windows::Storage::FileAccessMode_Read,
+            IID_PPV_ARGS(&stream))))
+    {
+        return false;
+    }
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStreamReferenceStatics> streamRefStatics;
+    if (FAILED(::RoGetActivationFactory(
+            Microsoft::WRL::Wrappers::HStringReference(RuntimeClass_Windows_Storage_Streams_RandomAccessStreamReference).Get(),
+            IID_PPV_ARGS(&streamRefStatics))))
+    {
+        return false;
+    }
+
+    return SUCCEEDED(streamRefStatics->CreateFromStream(stream.Get(), &streamRef));
+}
+
+std::wstring ToWideFilePath(const std::string& path)
+{
+    if (path.empty())
+    {
+        return {};
+    }
+
+    const int length = MultiByteToWideChar(CP_ACP, 0, path.c_str(), static_cast<int>(path.size()), nullptr, 0);
+    if (length <= 0)
+    {
+        return {};
+    }
+
+    std::wstring result(static_cast<size_t>(length), L'\0');
+    MultiByteToWideChar(CP_ACP, 0, path.c_str(), static_cast<int>(path.size()), result.data(), length);
+    return result;
+}
+
+void UpdateThumbnail(
+    ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater* updater,
+    const std::string& filePath)
+{
+    const std::wstring trackPath = ToWideFilePath(filePath);
+
+    std::wstring imagePath;
+    if (!CoverArt::Resolve(trackPath, imagePath))
+    {
+        updater->put_Thumbnail(nullptr);
+        return;
+    }
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStreamReference> streamRef;
+    if (CreateStreamReferenceFromFile(imagePath, streamRef))
+    {
+        updater->put_Thumbnail(streamRef.Get());
+    }
 }
 
 void HandleButtonPressed(WinampIPC* ipc, ABI::Windows::Media::SystemMediaTransportControlsButton button)
@@ -383,7 +448,7 @@ void SMTC::Shutdown()
     ipc_ = nullptr;
 }
 
-void SMTC::Update(const std::string& windowTitle, int status, int positionMs, int lengthMs)
+void SMTC::Update(const std::string& windowTitle, int status, int positionMs, int lengthMs, const std::string& filePath)
 {
     auto* transportControls = reinterpret_cast<ABI::Windows::Media::ISystemMediaTransportControls*>(controls_);
     auto* updater = reinterpret_cast<ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater*>(updater_);
@@ -398,6 +463,12 @@ void SMTC::Update(const std::string& windowTitle, int status, int positionMs, in
     UpdatePlaybackStatus(transportControls, status);
     UpdateTimeline(transportControlsV2.Get(), positionMs, lengthMs);
     UpdateMetadata(updater, windowTitle);
+
+    if (filePath != lastFilePath_)
+    {
+        lastFilePath_ = filePath;
+        UpdateThumbnail(updater, filePath);
+    }
 
     updater->Update();
 }
