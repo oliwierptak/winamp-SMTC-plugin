@@ -31,32 +31,6 @@ void SafeRelease(T*& value)
     }
 }
 
-std::wstring ToWide(const std::string& text)
-{
-    if (text.empty())
-    {
-        return {};
-    }
-
-    int length = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0);
-    UINT codePage = CP_UTF8;
-
-    if (length <= 0)
-    {
-        codePage = CP_ACP;
-        length = MultiByteToWideChar(codePage, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0);
-    }
-
-    if (length <= 0)
-    {
-        return {};
-    }
-
-    std::wstring result(static_cast<size_t>(length), L'\0');
-    MultiByteToWideChar(codePage, 0, text.c_str(), static_cast<int>(text.size()), result.data(), length);
-    return result;
-}
-
 std::wstring Trim(std::wstring value)
 {
     const auto first = value.find_first_not_of(L" \t\r\n");
@@ -69,10 +43,10 @@ std::wstring Trim(std::wstring value)
     return value.substr(first, last - first + 1);
 }
 
-void ParseTrackInfo(const std::string& rawTitle, std::wstring& artist, std::wstring& title)
+void ParseTrackInfo(const std::wstring& rawTitle, std::wstring& artist, std::wstring& title)
 {
     artist.clear();
-    title = Trim(ToWide(rawTitle));
+    title = Trim(rawTitle);
 
     const std::wstring suffix = L" - Winamp";
     if (title.size() > suffix.size())
@@ -372,7 +346,7 @@ void UpdateTimeline(
 
 void UpdateMetadata(
     ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater* updater,
-    const std::string& windowTitle)
+    const std::wstring& windowTitle)
 {
     std::wstring artist;
     std::wstring title;
@@ -449,7 +423,7 @@ void SMTC::Shutdown()
     RoUninitialize();
 }
 
-void SMTC::Update(const std::string& windowTitle, int status, int positionMs, int lengthMs, const std::string& filePath)
+void SMTC::Update(const std::wstring& windowTitle, int status, int positionMs, int lengthMs, const std::string& filePath)
 {
     auto* transportControls = reinterpret_cast<ABI::Windows::Media::ISystemMediaTransportControls*>(controls_);
     auto* updater = reinterpret_cast<ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater*>(updater_);

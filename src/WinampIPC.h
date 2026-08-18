@@ -18,7 +18,7 @@ public:
         hwnd_ = nullptr;
     }
 
-    std::string GetTitle();
+    std::wstring GetTitle();
     int GetStatus();
     int GetPositionMs();
     int GetLengthMs();
@@ -38,7 +38,7 @@ private:
     HWND hwnd_ = nullptr;
     UINT_PTR timer_ = 0;
     SMTC* smtc_ = nullptr;
-    std::string lastTitle_;
+    std::wstring lastTitle_;
     int lastStatus_ = -1;
 
     void Poll();

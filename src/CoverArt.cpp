@@ -126,7 +126,7 @@ bool ExtractId3v2Picture(std::ifstream& file, std::wstring& outImagePath)
 
     std::vector<uint8_t> tag(tagSize);
     file.read(reinterpret_cast<char*>(tag.data()), static_cast<std::streamsize>(tagSize));
-    if (!file && !file.eof())
+    if (file.gcount() != static_cast<std::streamsize>(tagSize))
     {
         return false;
     }
@@ -322,7 +322,7 @@ bool ExtractFlacPicture(std::ifstream& file, std::wstring& outImagePath)
         size_t pos = 4; // Skip picture type.
         const uint32_t mimeLen = ReadBE32(&block[pos]);
         pos += 4;
-        if (pos + mimeLen > block.size())
+        if (pos > block.size() || mimeLen > block.size() - pos)
         {
             return false;
         }
@@ -336,18 +336,27 @@ bool ExtractFlacPicture(std::ifstream& file, std::wstring& outImagePath)
         }
 
         const uint32_t descLen = ReadBE32(&block[pos]);
-        pos += 4 + descLen;
+        pos += 4;
+        if (pos > block.size() || descLen > block.size() - pos)
+        {
+            return false;
+        }
+        pos += descLen;
 
         // Skip width, height, depth, colors used.
+        if (block.size() - pos < 16)
+        {
+            return false;
+        }
         pos += 16;
-        if (pos + 4 > block.size())
+        if (block.size() - pos < 4)
         {
             return false;
         }
 
         const uint32_t dataLen = ReadBE32(&block[pos]);
         pos += 4;
-        if (pos + dataLen > block.size())
+        if (dataLen > block.size() - pos)
         {
             return false;
         }

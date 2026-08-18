@@ -10,7 +10,7 @@ class SMTC {
 public:
     bool Initialize(HWND, WinampIPC*);
     void Shutdown();
-    void Update(const std::string&, int, int, int, const std::string&);
+    void Update(const std::wstring&, int, int, int, const std::string&);
 
 private:
     void* controls_ = nullptr;

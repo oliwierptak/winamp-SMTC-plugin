@@ -4,15 +4,15 @@
 
 WinampIPC* WinampIPC::active_ = nullptr;
 
-std::string WinampIPC::GetTitle()
+std::wstring WinampIPC::GetTitle()
 {
-    char b[1024]{};
+    wchar_t title[1024]{};
     if (hwnd_)
     {
-        GetWindowTextA(hwnd_, b, 1024);
+        GetWindowTextW(hwnd_, title, static_cast<int>(std::size(title)));
     }
 
-    return b;
+    return title;
 }
 
 int WinampIPC::GetStatus()
