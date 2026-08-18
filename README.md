@@ -24,6 +24,11 @@ The plugin enables the following media control operations through Windows System
 - Playback status synchronization (Playing, Paused, Stopped)
 - Windows notification integration for media information display
 
+## Installation
+- Copy `gen_winsmtc.dll` into the Winamp `Plugins` directory. 
+- Restart Winamp.
+- The plugin should be available under the "General Purpose" plugin list under Winamp options.
+
 ## Notes
 Winamp 2.x General Purpose plugin starter, **Win32/x86**, MSVC **v145**, C++17.
 
@@ -33,9 +38,6 @@ Open `WinampSMTC.sln`, select **Release | Win32**, then Build Solution.
 
 Output:
 `bin\Release\gen_winsmtc.dll`
-
-Copy that DLL into the Winamp 2.95 `Plugins` directory. Restart Winamp.
-The plugin should be available under the "General Purpose" plugin list.
 
 ## Known issues
 Windows Media Notification Center shows "Unknown app" instead of "Winamp".
