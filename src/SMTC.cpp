@@ -446,6 +446,7 @@ void SMTC::Shutdown()
     SafeRelease(reinterpret_cast<ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater*&>(updater_));
     SafeRelease(reinterpret_cast<ABI::Windows::Media::ISystemMediaTransportControls*&>(controls_));
     ipc_ = nullptr;
+    RoUninitialize();
 }
 
 void SMTC::Update(const std::string& windowTitle, int status, int positionMs, int lengthMs, const std::string& filePath)
